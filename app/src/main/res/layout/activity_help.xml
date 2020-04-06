@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/acces_background_light"
+    android:backgroundTintMode="src_over"
+    android:backgroundTint="#5000">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="4"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:src="@drawable/match_maker_title"/>
+
+        <Button
+            android:id="@+id/back_button_help"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:backgroundTint="@color/common_google_signin_btn_text_light"
+            android:foreground="?attr/homeAsUpIndicator"
+            android:foregroundTint="@color/colorAccent"
+            android:textSize="20dp"></Button>
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:textAlignment="center"
+            android:text="@string/App_Welcome"
+            android:textSize="30dp"
+            android:textColor="#FFF"
+            android:textStyle="bold"
+            android:gravity="center_horizontal">
+
+        </TextView>
+            <LinearLayout
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:orientation="vertical"
+                android:layout_centerInParent="true">
+
+                <TextView
+                    android:id="@+id/description"
+                    android:layout_width="300dp"
+                    android:layout_height="300dp"
+                    android:textAlignment="textStart"
+                    android:textColor="#FFF"
+                    android:textAppearance=
+                        "@android:style/TextAppearance.DeviceDefault"
+                    android:textSize="25dp"
+                    android:gravity="center_horizontal"
+                    tools:ignore="RtlCompat" />
+            </LinearLayout>
+    </RelativeLayout>
+</LinearLayout>

@@ -1,0 +1,79 @@
+<resources>
+    <string name="app_name">MatchMaker</string>
+    <string name="title_activity_maps">Mapa</string>
+
+    //Pantalla inici sessió
+    <string name="Help">Ajuda</string>
+    <string name="Login">Accedir</string>
+    <string name="Register">Registrar</string>
+    <string name="Access">Pantalla accés</string>
+    <string name="Initial">Pantalla inici</string>
+    <string name="remember_pref">remember_preferences</string>
+    <string name="remember_user">remember_user</string>
+
+    //Pantalla ajuda
+    <string name="title_activity_help">Ajuda</string>
+    <string name="App_Welcome">Benvinguts a MatchMaker</string>
+    <string name="App_Description1">Aquesta aplicació mòbil permet organitzar partits amistosos dels esports més jugats actualment al país.</string>
+    <string name="App_Description2">Aquests esports són futbol, basquet i pàdel.</string>
+    <string name="App_Description3">Amb MatchMaker podràs crear partits dels esports nomenats, apuntar-te a partits del teu interés i veure les estadístiques personals sobre el ús de la aplicació.</string>
+
+    //Pantalla accedir
+    <string name="enter">Començar</string>
+    <string name="user">Usuari</string>
+    <string name="password">Contrassenya</string>
+    <string name="remember">Mantenir sessió iniciada</string>
+    <string name="invalid_user_pass">Usuari o contrassenya incorrectes</string>
+
+    //Pantalla registrar
+    <string name="save">Guardar</string>
+    <string name="error">* Error al registrar, els camps anteriors han de tenir un mínim de 5 caràcters i màxim 20</string>
+    <string name="saved_user">user</string>
+    <string name="saved_password">pass</string>
+    <string name="shared_preferences">preferences</string>
+
+    //Crear partit
+    <string name="create">Crear</string>
+    <string name="description">Descripció</string>
+    <string name="ubi">Lloc</string>
+    <string name="date">Data</string>
+    <string name="time">Hora</string>
+    <string name="level">Nivell</string>
+    <string name="players">Número jugadors</string>
+    <string name="low_level">Baix</string>
+    <string name="mid_level">Mig</string>
+    <string name="high_level">Alt</string>
+    <string name="all_level">Tots</string>
+    <string name="empty_fields">Camps anteriors incomplets</string>
+    <string name="max_players">El nombre de jugadors no pot ser superior a 40</string>
+    <string name="match_shared_data">match_shared_data</string>
+    <string name="saved_data">data</string>
+
+
+    //Menu
+    <string name="CreateMatch">Crear partit</string>
+    <string name="NextMatch">Propers partits</string>
+    <string name="Statistics">Estadístiques</string>
+    <string name="Map">Localitzar partits</string>
+
+    //Info partit
+    <string name="exit">finalitzar</string>
+    <string name="title_activity_maps_place_picker">Map</string>
+
+    //Mapa seleccionar ubi
+    <string name="select">seleccionar</string>
+
+    <!--    Permissions    -->
+    <string name="permission_rationale_location">Access to the location service is required to demonstrate the \'my location\' feature, which shows your current location on the map.</string>
+    <string name="location_permission_denied">This sample requires location permission to enable the \'my location\' layer. Please try again and grant access to use the location.\nIf the permission has been permanently denied, it can be enabled from the System Settings &gt; Apps &gt; \'Google Maps API Demos\'.</string>
+    <string name="permission_required_toast">Location permission is required for this demo.</string>
+
+    //ID match
+    <string name="id_match">id_match</string>
+    <string name="id_number">id_number</string>
+
+    //Llista ID
+    <string name="id_list">id_list</string>
+    <string name="id_number_list">id_number_list</string>
+
+</resources>

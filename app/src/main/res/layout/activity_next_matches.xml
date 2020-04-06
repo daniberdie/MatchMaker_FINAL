@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".NextMatchesActivity"
+    android:orientation="vertical"
+    android:background="@drawable/padel_light_2"
+    android:backgroundTintMode="src_over"
+    android:backgroundTint="#5000">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:orientation="vertical"
+        android:gravity="top">
+
+        <Button
+            android:id="@+id/back_button_main_next"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:backgroundTint="@color/common_google_signin_btn_text_light"
+            android:foreground="?attr/homeAsUpIndicator"
+            android:foregroundTint="@color/colorAccent"
+            android:textSize="20dp"></Button>
+
+        <ImageView
+            android:id="@+id/create_match_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/propers_partits_text"
+            android:layout_gravity="center_horizontal"></ImageView>
+
+    </LinearLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="top">
+
+    </RelativeLayout>
+</LinearLayout>
