@@ -74,6 +74,7 @@ public class MatchInfoActivity extends AppCompatActivity {
 
     private void moveToNextMatchesActivity() {
         Intent intent = new Intent(MatchInfoActivity.this,NextMatchesActivity.class);
+        intent.putExtra("sport", getIntent().getStringExtra("sport"));
         startActivity(intent);
     }
 

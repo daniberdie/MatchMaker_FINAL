@@ -86,7 +86,8 @@
             android:layout_height="50dp"
             android:background="#CCC"
             android:layout_below="@id/password_text"
-            android:layout_centerInParent="true">
+            android:layout_centerInParent="true"
+            android:inputType="textPassword">
         </EditText>
 
         <Space

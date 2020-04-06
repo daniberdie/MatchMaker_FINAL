@@ -47,7 +47,6 @@ public class LoginActivity extends AppCompatActivity {
     private void moveToMainActivity() {
 
         if(validateLogin(this)){
-            //TODO: Mantenir sessió iniciada
             rememberUserChecker(this);
             Intent intent = new Intent(LoginActivity.this, InitialActivity.class);
             startActivity(intent);

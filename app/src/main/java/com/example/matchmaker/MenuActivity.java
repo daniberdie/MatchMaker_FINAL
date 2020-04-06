@@ -52,6 +52,34 @@ public class MenuActivity extends Activity {
                 startActivity(intent);
             }
         });
+
+        nextMatchsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MenuActivity.this, NextMatchesActivity.class);
+                intent.putExtra("sport", getIntent().getStringExtra("sport"));
+                startActivity(intent);
+            }
+        });
+
+        mapBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MenuActivity.this,MapsActivity.class);
+                intent.putExtra("sport", getIntent().getStringExtra("sport"));
+                startActivity(intent);
+            }
+        });
+
+        statisticsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //TODO: afegir activitat estadístiques
+                Intent intent = new Intent();
+                intent.putExtra("sport", getIntent().getStringExtra("sport"));
+                startActivity(intent);
+            }
+        });
     }
 
     private void setFutTheme()

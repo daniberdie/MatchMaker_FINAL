@@ -7,9 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".NextMatchesActivity"
     android:orientation="vertical"
-    android:background="@drawable/padel_light_2"
-    android:backgroundTintMode="src_over"
-    android:backgroundTint="#5000">
+    android:id="@+id/next_matches_layout">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -35,11 +33,11 @@
             android:layout_gravity="center_horizontal"></ImageView>
 
     </LinearLayout>
-    <RelativeLayout
+    <ListView
+        android:id="@+id/listView_next_matches"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="top">
-
-    </RelativeLayout>
+    </ListView>
 </LinearLayout>

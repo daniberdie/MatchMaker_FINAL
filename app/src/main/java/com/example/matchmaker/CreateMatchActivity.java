@@ -33,6 +33,9 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -126,7 +129,11 @@ public class CreateMatchActivity extends AppCompatActivity {
         buttonCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createNewMatch();
+                try {
+                    createNewMatch();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -168,7 +175,7 @@ public class CreateMatchActivity extends AppCompatActivity {
         }
     }
 
-    private void createNewMatch() {
+    private void createNewMatch() throws JSONException {
         if(!checkEmptyFields()){
 
             if(num_players > 40){
@@ -189,7 +196,9 @@ public class CreateMatchActivity extends AppCompatActivity {
         }
     }
 
-    private void saveDataFromNewMatch(Context context) {
+    private void saveDataFromNewMatch(Context context) throws JSONException {
+        String json_list_id;
+
         //List ID matches
         SharedPreferences sharedIdList = context.getSharedPreferences(getString(R.string.id_list),Context.MODE_PRIVATE);
         SharedPreferences.Editor editor_list_id = sharedIdList.edit();
@@ -202,21 +211,23 @@ public class CreateMatchActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPref.edit();
 
         //ID match
-        id_match = sharedIdMatch.getInt(getString(R.string.id_match),0) + 1;
+        id_match = sharedIdMatch.getInt(getString(R.string.id_number),0) + 1;
         editor_match_id.putInt(getString(R.string.id_number),id_match);
         editor_match_id.commit();
         editor_match_id.apply();
 
         String [] strData = {description,location,date,time,level,players};
 
+
         //List ID matches
-        Set<String> idList = sharedIdList.getStringSet(getString(R.string.id_number_list), null);
-        idList.add(Integer.toString(id_match));
+        Set<String> idList = sharedIdList.getStringSet(getString(R.string.id_number_list), Collections.<String>emptySet());
+        String [] idArrayList = idList.toArray(new String [idList.size()+1]);
+        int position = idArrayList.length;
+        idArrayList[position-1] = Integer.toString(id_match);
+        idList = new HashSet<>(Arrays.asList(idArrayList));
         editor_list_id.putStringSet(getString(R.string.id_number_list),idList);
         editor_list_id.commit();
         editor_list_id.apply();
-
-        //Set<String> setData = new HashSet<>(Arrays.asList(strData));
 
         Gson gson = new Gson();
         String json = gson.toJson(strData);
