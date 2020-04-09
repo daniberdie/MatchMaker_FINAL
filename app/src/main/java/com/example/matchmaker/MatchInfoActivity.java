@@ -27,8 +27,9 @@ import java.util.Set;
 public class MatchInfoActivity extends AppCompatActivity {
 
     private TextView description, location, date, time, level, players;
-    private String strDesc, strLoc, strDate, strTime, strLevel, strPlayers;
-    private Button finish_exit;
+    private String strDesc, strLoc, strDate, strTime, strLevel, strPlayers, strUser, id_match;
+    private Button finish_exit, delete_match;
+    private boolean comesFromCreateMatchActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +45,11 @@ public class MatchInfoActivity extends AppCompatActivity {
         level = findViewById(R.id.saved_level);
         players = findViewById(R.id.saved_players);
         finish_exit = findViewById(R.id.exit_info);
+        delete_match = findViewById(R.id.delete_info);
+
+        comesFromCreateMatchActivity = false;
+
+        comesFromCreateMatchActivity = getIntent().getBooleanExtra("boolean_activity",false);
 
         if(getIntent().getStringExtra("sport").equals("fut"))
         {
@@ -64,6 +70,19 @@ public class MatchInfoActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        if(checkUserCreatedMatch(this)){
+            delete_match.setVisibility(View.VISIBLE);
+            delete_match.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    deleteMatchAndMoveToNextActivity();
+                }
+            });
+        }else{
+            delete_match.setVisibility(View.GONE);
+        }
+
+
         finish_exit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,10 +91,43 @@ public class MatchInfoActivity extends AppCompatActivity {
         });
     }
 
+    private void deleteMatchAndMoveToNextActivity() {
+        SharedPreferences sharedIdList = this.getSharedPreferences(getString(R.string.id_list),Context.MODE_PRIVATE);
+
+        Set<String> id_matches_list = sharedIdList.getStringSet(getIntent().getStringExtra("sport"), null);
+
+        if(id_matches_list.contains(id_match)){
+            id_matches_list.remove(id_match);
+
+            SharedPreferences.Editor editor_list_id = sharedIdList.edit();
+            editor_list_id.putStringSet(getIntent().getStringExtra("sport"),id_matches_list);
+            editor_list_id.commit();
+            editor_list_id.apply();
+
+            moveToNextMatchesActivity();
+        }
+    }
+
+    private boolean checkUserCreatedMatch(Context context) {
+        boolean ret = false;
+        SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
+        String default_user = sharedPref.getString(getString(R.string.saved_user),"admin");
+
+        if(default_user.equals(strUser)){
+            ret = true;
+        }
+
+        return ret;
+    }
+
     private void moveToNextMatchesActivity() {
-        Intent intent = new Intent(MatchInfoActivity.this,NextMatchesActivity.class);
-        intent.putExtra("sport", getIntent().getStringExtra("sport"));
-        startActivity(intent);
+        if(comesFromCreateMatchActivity) {
+            Intent intent = new Intent(MatchInfoActivity.this, NextMatchesActivity.class);
+            intent.putExtra("sport", getIntent().getStringExtra("sport"));
+            startActivity(intent);
+        }else{
+            finish();
+        }
     }
 
     private void setTextInfoActivity() throws JSONException {
@@ -92,21 +144,24 @@ public class MatchInfoActivity extends AppCompatActivity {
     private void getDataInfo(Context context) throws JSONException {
         SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.match_shared_data), Context.MODE_PRIVATE);
 
-        String id_match = getIntent().getStringExtra("id_match");
-        String json = sharedPref.getString(id_match, null);
-        JSONArray jsonArray = new JSONArray(json);
-        List<String> list = new ArrayList<String>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            list.add(jsonArray.getString(i));
+        id_match = getIntent().getStringExtra("id_match");
+        String json = sharedPref.getString(id_match, "");
+        if(!json.equals("")) {
+            JSONArray jsonArray = new JSONArray(json);
+            List<String> list = new ArrayList<String>();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                list.add(jsonArray.getString(i));
+            }
+
+            if (jsonArray.length() > 0) {
+                strDesc = list.get(0);
+                strLoc = list.get(1);
+                strDate = list.get(2);
+                strTime = list.get(3);
+                strLevel = list.get(4);
+                strPlayers = list.get(5);
+                strUser = list.get(6);
+            }
         }
-
-
-            //TODO: Revisar ordre he fet un apanyo temporal XD
-            strDesc = list.get(0);
-            strLoc = list.get(1);
-            strDate = list.get(2);
-            strTime = list.get(3);
-            strLevel = list.get(4);
-            strPlayers = list.get(5);
     }
 }

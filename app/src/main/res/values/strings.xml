@@ -57,7 +57,8 @@
     <string name="Map">Localitzar partits</string>
 
     //Info partit
-    <string name="exit">finalitzar</string>
+    <string name="exit">fet</string>
+    <string name="delete">borrar</string>
     <string name="title_activity_maps_place_picker">Map</string>
 
     //Mapa seleccionar ubi
@@ -75,5 +76,12 @@
     //Llista ID
     <string name="id_list">id_list</string>
     <string name="id_number_list">id_number_list</string>
+
+    //Estadistiques
+    <string name="totalGames">Partits jugats:</string>
+    <string name="activeGames">Partits actius:</string>
+    <string name="Menu">Menu</string>
+    <string name="CreatedGames">Partits creats:</string>
+    <string name="SportUssage">Ús d\'aquest esport:</string>
 
 </resources>

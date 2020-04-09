@@ -54,7 +54,7 @@ public class CreateMatchActivity extends AppCompatActivity {
     private TimePickerDialog.OnTimeSetListener mTimeSetListener;
     private Button buttonBack,buttonCreate;
     private int num_players, id_match;
-    private String description, location, date, time, level,players;
+    private String description, location, date, time, level,players, user, position_map;
     private final int PLACE_PICKER_REQUEST = 1;
     private static final int SECOND_ACTIVITY_REQUEST_CODE = 0;
 
@@ -171,6 +171,8 @@ public class CreateMatchActivity extends AppCompatActivity {
             if(resultCode == RESULT_OK){
                 String returnAddressString = data.getStringExtra(Intent.EXTRA_TEXT);
                 location_editText.setText(returnAddressString);
+
+                position_map = data.getStringExtra("position");
             }
         }
     }
@@ -185,6 +187,7 @@ public class CreateMatchActivity extends AppCompatActivity {
                 saveDataFromNewMatch(this);
                 Intent intent = new Intent(CreateMatchActivity.this, MatchInfoActivity.class);
                 intent.putExtra("sport", getIntent().getStringExtra("sport"));
+                intent.putExtra("boolean_activity",true);
                 intent.putExtra("id_match",Integer.toString(id_match));
                 startActivity(intent);
             }
@@ -197,7 +200,6 @@ public class CreateMatchActivity extends AppCompatActivity {
     }
 
     private void saveDataFromNewMatch(Context context) throws JSONException {
-        String json_list_id;
 
         //List ID matches
         SharedPreferences sharedIdList = context.getSharedPreferences(getString(R.string.id_list),Context.MODE_PRIVATE);
@@ -216,16 +218,16 @@ public class CreateMatchActivity extends AppCompatActivity {
         editor_match_id.commit();
         editor_match_id.apply();
 
-        String [] strData = {description,location,date,time,level,players};
+        String [] strData = {description,location,date,time,level,players,user,position_map};
 
 
         //List ID matches
-        Set<String> idList = sharedIdList.getStringSet(getString(R.string.id_number_list), Collections.<String>emptySet());
+        Set<String> idList = sharedIdList.getStringSet(getIntent().getStringExtra("sport"), Collections.<String>emptySet());
         String [] idArrayList = idList.toArray(new String [idList.size()+1]);
         int position = idArrayList.length;
         idArrayList[position-1] = Integer.toString(id_match);
         idList = new HashSet<>(Arrays.asList(idArrayList));
-        editor_list_id.putStringSet(getString(R.string.id_number_list),idList);
+        editor_list_id.putStringSet(getIntent().getStringExtra("sport"),idList);
         editor_list_id.commit();
         editor_list_id.apply();
 
@@ -234,6 +236,16 @@ public class CreateMatchActivity extends AppCompatActivity {
         editor.putString(String.valueOf(id_match), json);
         editor.commit();
         editor.apply();
+
+        //Statistics
+        SharedPreferences statisticsPreferences = context.getSharedPreferences(getIntent().getStringExtra("sport"), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor_statPref = statisticsPreferences.edit();
+
+        int created_games_total = statisticsPreferences.getInt("created_matches", 0) + 1;
+
+        editor_statPref.putInt("created_matches",created_games_total);
+        editor_statPref.commit();
+        editor_statPref.apply();
 
     }
 
@@ -261,6 +273,11 @@ public class CreateMatchActivity extends AppCompatActivity {
         }
 
         num_players = Integer.parseInt(players);
+
+        //Obtenir usuari
+        SharedPreferences sharedPref = this.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
+        user = sharedPref.getString(getString(R.string.saved_user),"admin");
+
     }
 
 

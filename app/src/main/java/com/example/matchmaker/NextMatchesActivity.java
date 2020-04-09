@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -28,6 +29,7 @@ public class NextMatchesActivity extends AppCompatActivity {
     private Button back_button;
     private ArrayList<String> matches = new ArrayList<>();
     private String[] id_sorted_list;
+    private TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,21 +84,23 @@ public class NextMatchesActivity extends AppCompatActivity {
     private void createArrayList(Context context) throws JSONException {
         SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.match_shared_data),Context.MODE_PRIVATE);
         SharedPreferences sharedIdList = context.getSharedPreferences(getString(R.string.id_list), Context.MODE_PRIVATE);
-        Set<String> id_matches = sharedIdList.getStringSet(getString(R.string.id_number_list), null);
+        Set<String> id_matches = sharedIdList.getStringSet(getIntent().getStringExtra("sport"), Collections.<String>emptySet());
 
         String [] idArrayList = id_matches.toArray(new String [id_matches.size()]);
 
         id_sorted_list = new String[idArrayList.length];
 
         for(int i = 0; i < idArrayList.length; i++){
-            String json = sharedPref.getString(idArrayList[i], null);
-            JSONArray jsonArray = new JSONArray(json);
-            List<String> list = new ArrayList<String>();
-            for (int x = 0; x < jsonArray.length(); x++) {
-                list.add(jsonArray.getString(x));
+            String json = sharedPref.getString(idArrayList[i], "");
+            if(!json.equals("")) {
+                JSONArray jsonArray = new JSONArray(json);
+                List<String> list = new ArrayList<String>();
+                for (int x = 0; x < jsonArray.length(); x++) {
+                    list.add(jsonArray.getString(x));
+                }
+                matches.add(list.get(0) + " | " + list.get(2) + "  " + list.get(3));
+                id_sorted_list[i] = idArrayList[i];
             }
-            matches.add(list.get(0) + " | " + list.get(2) + "  " + list.get(3));
-            id_sorted_list[i] = idArrayList[i];
         }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.list_view_matches, matches);

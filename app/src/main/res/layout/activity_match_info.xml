@@ -188,15 +188,29 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="0">
+        android:layout_weight="0"
+        android:orientation="horizontal">
         <Button
             android:id="@+id/exit_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="2"
             android:layout_alignParentBottom="true"
             android:text="@string/exit"
             android:textSize="50dp"
             android:background="#6AFB84"></Button>
+
+        <Button
+            android:id="@+id/delete_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_weight="2"
+            android:text="@string/delete"
+            android:textSize="50dp"
+            android:background="#FB6A6A"></Button>
+
+
     </LinearLayout>
 </LinearLayout>
 </ScrollView>

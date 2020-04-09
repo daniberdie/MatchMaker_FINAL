@@ -39,6 +39,8 @@ public class MapsActivityPlacePicker extends FragmentActivity implements
     private GoogleMap mMap;
     private Button select_location_button;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private Marker marker;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,9 +63,11 @@ public class MapsActivityPlacePicker extends FragmentActivity implements
     }
 
     private void sendLocationAddressToCreateMatchActivity() {
-        String  locationAddress = getCity(this, mMap.getMyLocation().getLatitude(), mMap.getMyLocation().getLongitude());
+        String  locationAddress = getCity(this, marker.getPosition().latitude, marker.getPosition().longitude);
+        String position = (Double.toString(marker.getPosition().latitude) + "," + Double.toString(marker.getPosition().longitude));
         Intent intent = new Intent();
         intent.putExtra(Intent.EXTRA_TEXT,locationAddress);
+        intent.putExtra("position", position);
         setResult(RESULT_OK,intent);
         finish();
     }
@@ -90,7 +94,7 @@ public class MapsActivityPlacePicker extends FragmentActivity implements
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(latLng);
                 mMap.clear();
-                mMap.addMarker(markerOptions);
+                marker = mMap.addMarker(markerOptions);
             }
         });
 
