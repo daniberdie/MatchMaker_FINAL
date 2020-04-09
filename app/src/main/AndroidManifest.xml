@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.matchmaker">
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
@@ -30,35 +31,71 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <activity android:name=".StatisticsActivity"></activity>
+        <activity
+            android:name=".StatisticsActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
 
         <activity
             android:name=".MapsActivityPlacePicker"
-            android:label="@string/title_activity_maps_place_picker" />
-        <activity android:name=".MatchInfoActivity" />
-        <activity android:name=".NextMatchesActivity" />
-        <activity android:name=".CreateMatchActivity" />
+            android:label="@string/title_activity_maps_place_picker"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
+        <activity android:name=".MatchInfoActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
+        <activity android:name=".NextMatchesActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
+        <activity android:name=".CreateMatchActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
         <activity
             android:name=".RegisterActivity"
-            android:label="@string/Register" />
+            android:label="@string/Register"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
         <activity
             android:name=".LoginActivity"
-            android:label="@string/Login" />
+            android:label="@string/Login"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
         <activity
             android:name=".HelpActivity"
-            android:label="@string/title_activity_help" />
+            android:label="@string/title_activity_help"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
         <activity
             android:name=".MapsActivity"
-            android:label="@string/title_activity_maps" />
+            android:label="@string/title_activity_maps"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
         <activity
             android:name=".InitialActivity"
-            android:label="@string/Initial" />
+            android:label="@string/Initial"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
         <activity
             android:name=".MenuActivity"
-            android:label="@string/Initial" />
+            android:label="@string/Initial"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
         <activity
             android:name=".AccesActivity"
-            android:label="@string/Access">
+            android:label="@string/Access"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
