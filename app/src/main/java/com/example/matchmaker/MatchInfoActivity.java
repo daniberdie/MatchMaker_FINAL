@@ -2,7 +2,9 @@ package com.example.matchmaker;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,6 +14,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -75,7 +78,7 @@ public class MatchInfoActivity extends AppCompatActivity {
             delete_match.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    deleteMatchAndMoveToNextActivity();
+                    throwToast();
                 }
             });
         }else{
@@ -121,13 +124,9 @@ public class MatchInfoActivity extends AppCompatActivity {
     }
 
     private void moveToNextMatchesActivity() {
-        if(comesFromCreateMatchActivity) {
-            Intent intent = new Intent(MatchInfoActivity.this, NextMatchesActivity.class);
-            intent.putExtra("sport", getIntent().getStringExtra("sport"));
-            startActivity(intent);
-        }else{
-            finish();
-        }
+        Intent intent = new Intent(MatchInfoActivity.this, NextMatchesActivity.class);
+        intent.putExtra("sport", getIntent().getStringExtra("sport"));
+        startActivity(intent);
     }
 
     private void setTextInfoActivity() throws JSONException {
@@ -164,4 +163,27 @@ public class MatchInfoActivity extends AppCompatActivity {
             }
         }
     }
+
+    private void throwToast() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setMessage(getString(R.string.confirmDelete))
+            .setTitle(getString(R.string.deleteMatch))
+            .setPositiveButton(getString(R.string.yes), (new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    deleteMatchAndMoveToNextActivity();
+                }
+            }))
+            .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            })
+            .setCancelable(false)
+            .create();
+
+        dialog.show();
+    }
+
 }

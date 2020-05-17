@@ -84,4 +84,16 @@
     <string name="CreatedGames">Partits creats:</string>
     <string name="SportUssage">Ús d\'aquest esport:</string>
 
+    //Dialogs
+    <string name="internetConnection">Connecta\'t a internet per continuar</string>
+    <string name="notConnected">No tens connexió</string>
+    <string name="retry">Tornar a provar</string>
+    <string name="confirmDelete">Esteu segurs que voleu eliminar el partit?</string>
+    <string name="deleteMatch">Eliminar partit</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+
+    //Auth Firebase
+    <string name="client_id">565122491776-c37p44kpal35r23ivmvren5gbco0h3cf.apps.googleusercontent.com</string>
+
 </resources>

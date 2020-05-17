@@ -41,18 +41,6 @@
             android:orientation="vertical">
 
             <Button
-                android:id="@+id/Register"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="35dp"
-                android:layout_gravity="center"
-                android:text="@string/Register"
-                android:textStyle="bold"
-                android:textSize="50dp"
-                android:textColor="@color/colorWhite"
-                android:backgroundTint="#A66685ED"/>
-
-            <Button
                 android:id="@+id/Login"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

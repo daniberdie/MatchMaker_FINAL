@@ -21,9 +21,9 @@
             android:layout_height="75dp"
             android:layout_alignParentTop="true"
             android:backgroundTint="@color/common_google_signin_btn_text_light"
-            android:foreground="@android:drawable/ic_lock_power_off"
             android:foregroundTint="@color/colorAccent"
-            android:textSize="20dp"/>
+            android:foreground="@android:drawable/ic_lock_power_off"
+            android:textSize="20dp" />
 
         <ImageButton
             android:layout_centerInParent="true"

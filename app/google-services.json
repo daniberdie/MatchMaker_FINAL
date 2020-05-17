@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "565122491776",
+    "firebase_url": "https://matchmaker-e803c.firebaseio.com",
+    "project_id": "matchmaker-e803c",
+    "storage_bucket": "matchmaker-e803c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565122491776:android:42991e342021c236d60d65",
+        "android_client_info": {
+          "package_name": "com.example.matchmaker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "565122491776-797l00plp6a23vehd5poq8km7b20cilu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDasJmyX0gkZxzCshtBLe9UbaKECZYvZBQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "565122491776-797l00plp6a23vehd5poq8km7b20cilu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -31,6 +32,12 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firestore.v1.WriteResult;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -41,9 +48,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class CreateMatchActivity extends AppCompatActivity {
@@ -57,6 +67,7 @@ public class CreateMatchActivity extends AppCompatActivity {
     private String description, location, date, time, level,players, user, position_map;
     private final int PLACE_PICKER_REQUEST = 1;
     private static final int SECOND_ACTIVITY_REQUEST_CODE = 0;
+    private FirebaseFirestore mFirestore;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -64,10 +75,18 @@ public class CreateMatchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_match);
 
+        mFirestore = FirebaseFirestore.getInstance();
+
+        //Millora input de dades
         description_editText = findViewById(R.id.description_editText);
+
         location_editText = findViewById(R.id.ubication_editText);
+        location_editText.setKeyListener(null);
+
         date_editText = findViewById(R.id.date_editText);
+        date_editText.setKeyListener(null);
         time_editText = findViewById(R.id.time_editText);
+        time_editText.setKeyListener(null);
         level_spinner = findViewById(R.id.level_spinner);
         players_editText = findViewById(R.id.players_editText);
 
@@ -179,7 +198,6 @@ public class CreateMatchActivity extends AppCompatActivity {
 
     private void createNewMatch() throws JSONException {
         if(!checkEmptyFields()){
-
             if(num_players > 40){
                 Toast toast = Toast.makeText(this,getString(R.string.max_players), Toast.LENGTH_LONG);
                 toast.show();
@@ -199,6 +217,7 @@ public class CreateMatchActivity extends AppCompatActivity {
         }
     }
 
+    //TODO: Revisar us de Globals
     private void saveDataFromNewMatch(Context context) throws JSONException {
 
         //List ID matches
@@ -212,13 +231,46 @@ public class CreateMatchActivity extends AppCompatActivity {
         SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.match_shared_data),Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
+        //Id matches amb Globals
+        /*
+        Globals.idMatch += 1;
+        List<Integer> matchesList = Globals.mapIdMatches.get(getIntent().getStringExtra("sport"));
+        matchesList.add(Globals.idMatch);
+        Globals.mapIdMatches.put(getIntent().getStringExtra("sport"),matchesList);*/
+
         //ID match
         id_match = sharedIdMatch.getInt(getString(R.string.id_number),0) + 1;
         editor_match_id.putInt(getString(R.string.id_number),id_match);
         editor_match_id.commit();
         editor_match_id.apply();
 
-        String [] strData = {description,location,date,time,level,players,user,position_map};
+        String [] strData = {date,description,level,location,players,position_map,getIntent().getStringExtra("sport"),time,user};
+
+        DocumentReference docRef = mFirestore.collection("app_data").document("1");
+        Map<String, String> mapData = new HashMap<>();
+        mapData.put("date", date);
+        mapData.put("description", description);
+        mapData.put("level", level);
+        mapData.put("location", location);
+        mapData.put("players", players);
+        mapData.put("position_map", position_map);
+        mapData.put("sport", getIntent().getStringExtra("sport"));
+        mapData.put("time", time);
+        mapData.put("user", user);
+
+        docRef.set(mapData).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(CreateMatchActivity.this, "Added to firebase", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(CreateMatchActivity.this, "Fail", Toast.LENGTH_SHORT).show();
+            }
+        });
+        //Data matches amb Globals
+        //Globals.mapMatchData.put(Globals.idMatch,strData);
 
 
         //List ID matches
@@ -242,6 +294,11 @@ public class CreateMatchActivity extends AppCompatActivity {
         SharedPreferences.Editor editor_statPref = statisticsPreferences.edit();
 
         int created_games_total = statisticsPreferences.getInt("created_matches", 0) + 1;
+
+        //Created Matches Statistics
+        /*Integer[] statistics = Globals.mapStatistics.get(getIntent().getStringExtra("sport"));
+        statistics[0] = statistics [0]++;
+        Globals.mapStatistics.put(getIntent().getStringExtra("sport"),statistics);*/
 
         editor_statPref.putInt("created_matches",created_games_total);
         editor_statPref.commit();
