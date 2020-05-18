@@ -32,11 +32,16 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firestore.v1.WriteResult;
 import com.google.gson.Gson;
 
@@ -68,6 +73,8 @@ public class CreateMatchActivity extends AppCompatActivity {
     private final int PLACE_PICKER_REQUEST = 1;
     private static final int SECOND_ACTIVITY_REQUEST_CODE = 0;
     private FirebaseFirestore mFirestore;
+    private FirebaseAuth mFireAuth;
+    public int id_new_match = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -76,6 +83,7 @@ public class CreateMatchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_create_match);
 
         mFirestore = FirebaseFirestore.getInstance();
+        mFireAuth = FirebaseAuth.getInstance();
 
         //Millora input de dades
         description_editText = findViewById(R.id.description_editText);
@@ -148,11 +156,7 @@ public class CreateMatchActivity extends AppCompatActivity {
         buttonCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
                     createNewMatch();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
             }
         });
 
@@ -196,7 +200,7 @@ public class CreateMatchActivity extends AppCompatActivity {
         }
     }
 
-    private void createNewMatch() throws JSONException {
+    private void createNewMatch() {
         if(!checkEmptyFields()){
             if(num_players > 40){
                 Toast toast = Toast.makeText(this,getString(R.string.max_players), Toast.LENGTH_LONG);
@@ -218,50 +222,44 @@ public class CreateMatchActivity extends AppCompatActivity {
     }
 
     //TODO: Revisar us de Globals
-    private void saveDataFromNewMatch(Context context) throws JSONException {
+    private void saveDataFromNewMatch(Context context){
 
-        //List ID matches
-        SharedPreferences sharedIdList = context.getSharedPreferences(getString(R.string.id_list),Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor_list_id = sharedIdList.edit();
-
-        //ID match
-        SharedPreferences sharedIdMatch = context.getSharedPreferences(getString(R.string.id_match),Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor_match_id = sharedIdMatch.edit();
-
-        SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.match_shared_data),Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-
-        //Id matches amb Globals
-        /*
-        Globals.idMatch += 1;
-        List<Integer> matchesList = Globals.mapIdMatches.get(getIntent().getStringExtra("sport"));
-        matchesList.add(Globals.idMatch);
-        Globals.mapIdMatches.put(getIntent().getStringExtra("sport"),matchesList);*/
-
-        //ID match
-        id_match = sharedIdMatch.getInt(getString(R.string.id_number),0) + 1;
-        editor_match_id.putInt(getString(R.string.id_number),id_match);
-        editor_match_id.commit();
-        editor_match_id.apply();
-
-        String [] strData = {date,description,level,location,players,position_map,getIntent().getStringExtra("sport"),time,user};
-
-        DocumentReference docRef = mFirestore.collection("app_data").document("1");
-        Map<String, String> mapData = new HashMap<>();
-        mapData.put("date", date);
-        mapData.put("description", description);
-        mapData.put("level", level);
-        mapData.put("location", location);
-        mapData.put("players", players);
-        mapData.put("position_map", position_map);
-        mapData.put("sport", getIntent().getStringExtra("sport"));
-        mapData.put("time", time);
-        mapData.put("user", user);
-
-        docRef.set(mapData).addOnSuccessListener(new OnSuccessListener<Void>() {
+        mFirestore.collection("id_matches").document("id").get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
-            public void onSuccess(Void aVoid) {
-                Toast.makeText(CreateMatchActivity.this, "Added to firebase", Toast.LENGTH_SHORT).show();
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                DocumentSnapshot documentSnapshot = task.getResult();
+                String id_match_firebase = documentSnapshot.getString("id");
+                id_new_match = Integer.parseInt(id_match_firebase) + 1;
+                mFirestore.collection("id_matches").document("id").update("id",String.valueOf(id_new_match));
+
+                DocumentReference docRef = mFirestore.collection("app_data").document(String.valueOf(id_new_match));
+                Map<String, String> mapData = new HashMap<>();
+                mapData.put("date", date);
+                mapData.put("description", description);
+                mapData.put("level", level);
+                mapData.put("location", location);
+                mapData.put("players", players);
+                mapData.put("position_map", position_map);
+                mapData.put("sport", getIntent().getStringExtra("sport"));
+                mapData.put("time", time);
+                mapData.put("user", mFireAuth.getCurrentUser().getEmail());
+
+                docRef.set(mapData).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(CreateMatchActivity.this, "Added to firebase", Toast.LENGTH_SHORT).show();
+                        Map<String, String> user = new HashMap<>();
+                        user.put("user", mFireAuth.getCurrentUser().getEmail());
+                        mFirestore.collection("users_matches").document(String.valueOf(id_new_match)).set(user);
+
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(CreateMatchActivity.this, "Fail", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -269,25 +267,6 @@ public class CreateMatchActivity extends AppCompatActivity {
                 Toast.makeText(CreateMatchActivity.this, "Fail", Toast.LENGTH_SHORT).show();
             }
         });
-        //Data matches amb Globals
-        //Globals.mapMatchData.put(Globals.idMatch,strData);
-
-
-        //List ID matches
-        Set<String> idList = sharedIdList.getStringSet(getIntent().getStringExtra("sport"), Collections.<String>emptySet());
-        String [] idArrayList = idList.toArray(new String [idList.size()+1]);
-        int position = idArrayList.length;
-        idArrayList[position-1] = Integer.toString(id_match);
-        idList = new HashSet<>(Arrays.asList(idArrayList));
-        editor_list_id.putStringSet(getIntent().getStringExtra("sport"),idList);
-        editor_list_id.commit();
-        editor_list_id.apply();
-
-        Gson gson = new Gson();
-        String json = gson.toJson(strData);
-        editor.putString(String.valueOf(id_match), json);
-        editor.commit();
-        editor.apply();
 
         //Statistics
         SharedPreferences statisticsPreferences = context.getSharedPreferences(getIntent().getStringExtra("sport"), Context.MODE_PRIVATE);
