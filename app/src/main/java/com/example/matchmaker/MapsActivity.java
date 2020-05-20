@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.widget.ArrayAdapter;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -22,6 +23,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,51 +49,49 @@ public class MapsActivity extends FragmentActivity implements
     private GoogleMap mMap;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private LatLng [] latLngs_array;
-    private String [] idArrayList;
+    private DocumentSnapshot [] idArrayList;
+    private FirebaseFirestore mFirestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        mFirestore = FirebaseFirestore.getInstance();
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        try {
-            getAllMatches(this);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
-    private void getAllMatches(Context context) throws JSONException {
-        SharedPreferences sharedIdList = context.getSharedPreferences(getString(R.string.id_list), Context.MODE_PRIVATE);
-        SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.match_shared_data),Context.MODE_PRIVATE);
+    private void getAllMatches() {
 
-        Set<String> id_matches = sharedIdList.getStringSet(getIntent().getStringExtra("sport"), Collections.<String>emptySet());
+        mFirestore.collection("app_data").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                int counter = 0;
+                List<DocumentSnapshot> documentList = queryDocumentSnapshots.getDocuments();
+                idArrayList = documentList.toArray(new DocumentSnapshot[documentList.size()]);
+                latLngs_array = new LatLng[idArrayList.length];
+                for (DocumentSnapshot documentSnapshot : documentList) {
+                    if (documentSnapshot.getString("sport").equals(getIntent().getStringExtra("sport"))) {
+                        String[] position = documentSnapshot.getString("position_map").split(",");
+                        LatLng latLng = new LatLng(Double.parseDouble(position[0]), Double.parseDouble(position[1]));
+                        latLngs_array[counter] = latLng;
+                        counter++;
+                    }
 
-        idArrayList = id_matches.toArray(new String [id_matches.size()]);
-
-        latLngs_array = new LatLng[idArrayList.length];
-
-        for(int i = 0; i < idArrayList.length; i++) {
-            String json = sharedPref.getString(idArrayList[i], "");
-            if (!json.equals("")) {
-                JSONArray jsonArray = new JSONArray(json);
-                List<String> list = new ArrayList<String>();
-                for (int x = 0; x < jsonArray.length(); x++) {
-                    list.add(jsonArray.getString(x));
                 }
 
-                String [] position = list.get(7).split(",");
-                LatLng latLng = new LatLng(Double.parseDouble(position[0]), Double.parseDouble(position[1]));
-
-                latLngs_array[i] = latLng;
-
+                enableMyLocation();
+                putMarkers(mMap);
+                mMap.setOnMyLocationButtonClickListener(MapsActivity.this);
+                mMap.setOnMyLocationClickListener(MapsActivity.this);
+                mMap.setOnMarkerClickListener(MapsActivity.this);
             }
-        }
+        });
     }
+
 
 
     /**
@@ -103,20 +106,19 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        enableMyLocation();
-        putMarkers(mMap);
-        mMap.setOnMyLocationButtonClickListener(this);
-        mMap.setOnMyLocationClickListener(this);
-        mMap.setOnMarkerClickListener(this);
+        getAllMatches();
+
     }
 
     private void putMarkers(GoogleMap mMap) {
         MarkerOptions markerOptions = new MarkerOptions();
 
         for(int i= 0; i< latLngs_array.length; i++){
-            markerOptions.position(latLngs_array[i]);
-            markerOptions.title(idArrayList[i]);
-            mMap.addMarker(markerOptions);
+            if(latLngs_array[i] != null && idArrayList[i] != null){
+                markerOptions.position(latLngs_array[i]);
+                markerOptions.title(idArrayList[i].getId());
+                mMap.addMarker(markerOptions);
+            }
         }
     }
 

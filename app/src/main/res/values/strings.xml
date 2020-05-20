@@ -59,6 +59,8 @@
     //Info partit
     <string name="exit">fet</string>
     <string name="delete">borrar</string>
+    <string name="join">apuntar-se</string>
+    <string name="unjoin">desapuntar-se</string>
     <string name="title_activity_maps_place_picker">Map</string>
 
     //Mapa seleccionar ubi

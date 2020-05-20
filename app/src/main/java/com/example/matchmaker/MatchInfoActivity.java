@@ -1,5 +1,6 @@
 package com.example.matchmaker;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
@@ -16,6 +17,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -30,14 +37,20 @@ import java.util.Set;
 public class MatchInfoActivity extends AppCompatActivity {
 
     private TextView description, location, date, time, level, players;
-    private String strDesc, strLoc, strDate, strTime, strLevel, strPlayers, strUser, id_match;
+    private String strUser, id_match;
     private Button finish_exit, delete_match;
-    private boolean comesFromCreateMatchActivity;
+    private String comesFromActivity;
+    private FirebaseFirestore mFirestore;
+    private FirebaseAuth mFireauth;
+    public boolean checkUserCreator = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_match_info);
+
+        mFirestore = FirebaseFirestore.getInstance();
+        mFireauth = FirebaseAuth.getInstance();
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.activity_infoMatch);
 
@@ -50,9 +63,7 @@ public class MatchInfoActivity extends AppCompatActivity {
         finish_exit = findViewById(R.id.exit_info);
         delete_match = findViewById(R.id.delete_info);
 
-        comesFromCreateMatchActivity = false;
-
-        comesFromCreateMatchActivity = getIntent().getBooleanExtra("boolean_activity",false);
+        comesFromActivity = getIntent().getStringExtra("activity");
 
         if(getIntent().getStringExtra("sport").equals("fut"))
         {
@@ -67,24 +78,7 @@ public class MatchInfoActivity extends AppCompatActivity {
             layout.setBackground(getResources().getDrawable(R.drawable.padel_initial));
         }
 
-        try {
-            setTextInfoActivity();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        if(checkUserCreatedMatch(this)){
-            delete_match.setVisibility(View.VISIBLE);
-            delete_match.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    throwToast();
-                }
-            });
-        }else{
-            delete_match.setVisibility(View.GONE);
-        }
-
+        getDataInfo();
 
         finish_exit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,12 +105,25 @@ public class MatchInfoActivity extends AppCompatActivity {
         }
     }
 
-    private boolean checkUserCreatedMatch(Context context) {
-        boolean ret = false;
-        SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
-        String default_user = sharedPref.getString(getString(R.string.saved_user),"admin");
+    private boolean checkUserCreatedMatch() {
 
-        if(default_user.equals(strUser)){
+        boolean ret = false;
+
+        id_match = getIntent().getStringExtra("id_match");
+        mFirestore.collection("app_data").document(id_match).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                DocumentSnapshot documentSnapshot = task.getResult();
+                strUser = documentSnapshot.getString("user");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(MatchInfoActivity.this, "Fail", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        if(strUser.equals(mFireauth.getCurrentUser().getEmail())){
             ret = true;
         }
 
@@ -129,39 +136,43 @@ public class MatchInfoActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void setTextInfoActivity() throws JSONException {
-        getDataInfo(this);
-        description.setText(strDesc);
-        location.setText(strLoc);
-        date.setText(strDate);
-        time.setText(strTime);
-        level.setText(strLevel);
-        players.setText(strPlayers);
-
-    }
-
-    private void getDataInfo(Context context) throws JSONException {
-        SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.match_shared_data), Context.MODE_PRIVATE);
+    private void getDataInfo(){
 
         id_match = getIntent().getStringExtra("id_match");
-        String json = sharedPref.getString(id_match, "");
-        if(!json.equals("")) {
-            JSONArray jsonArray = new JSONArray(json);
-            List<String> list = new ArrayList<String>();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                list.add(jsonArray.getString(i));
-            }
+        mFirestore.collection("app_data").document(id_match).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                DocumentSnapshot documentSnapshot = task.getResult();
 
-            if (jsonArray.length() > 0) {
-                strDesc = list.get(0);
-                strLoc = list.get(1);
-                strDate = list.get(2);
-                strTime = list.get(3);
-                strLevel = list.get(4);
-                strPlayers = list.get(5);
-                strUser = list.get(6);
+                description.setText(documentSnapshot.getString("description"));
+                location.setText(documentSnapshot.getString("location"));
+                date.setText(documentSnapshot.getString("date"));
+                time.setText(documentSnapshot.getString("time"));
+                level.setText(documentSnapshot.getString("level"));
+                players.setText(documentSnapshot.getString("players"));
+                strUser = documentSnapshot.getString("user");
+
+                if(checkUserCreatedMatch()){
+                    delete_match.setVisibility(View.VISIBLE);
+                    delete_match.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            throwToast();
+                        }
+                    });
+                }else if (comesFromActivity.equals("map")){
+                    delete_match.setVisibility(View.VISIBLE);
+                    delete_match.setText(R.string.join);
+                }else{
+                    delete_match.setText(R.string.unjoin);
+                }
             }
-        }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(MatchInfoActivity.this, "Fail", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void throwToast() {

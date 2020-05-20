@@ -15,6 +15,11 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -30,11 +35,16 @@ public class NextMatchesActivity extends AppCompatActivity {
     private ArrayList<String> matches = new ArrayList<>();
     private String[] id_sorted_list;
     private TextView textView;
+    private FirebaseFirestore mFirestore;
+    private FirebaseAuth mFireauth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_next_matches);
+
+        mFirestore = FirebaseFirestore.getInstance();
+        mFireauth = FirebaseAuth.getInstance();
 
         LinearLayout layout = findViewById(R.id.next_matches_layout);
         listView = findViewById(R.id.listView_next_matches);
@@ -63,11 +73,7 @@ public class NextMatchesActivity extends AppCompatActivity {
             layout.setBackground(getResources().getDrawable(R.drawable.padel_initial));
         }
 
-        try {
-            createArrayList(this);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        createArrayList();
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -81,34 +87,30 @@ public class NextMatchesActivity extends AppCompatActivity {
 
     }
 
-    private void createArrayList(Context context) throws JSONException {
-        SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.match_shared_data),Context.MODE_PRIVATE);
-        SharedPreferences sharedIdList = context.getSharedPreferences(getString(R.string.id_list), Context.MODE_PRIVATE);
-        Set<String> id_matches = sharedIdList.getStringSet(getIntent().getStringExtra("sport"), Collections.<String>emptySet());
+    private void createArrayList() {
 
-        String [] idArrayList = id_matches.toArray(new String [id_matches.size()]);
+        mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if(documentSnapshot.exists()){
+                    id_sorted_list = documentSnapshot.getString("matches").split(",");
 
-        id_sorted_list = new String[idArrayList.length];
+                    for (int i = 0; i < id_sorted_list.length; i++) {
+                        mFirestore.collection("app_data").document(id_sorted_list[i]).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                if(documentSnapshot.getString("sport").equals(getIntent().getStringExtra("sport"))){
+                                    matches.add(documentSnapshot.getString("description") + " | " + documentSnapshot.getString("date") + "  " + documentSnapshot.getString("time"));
+                                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(NextMatchesActivity.this, R.layout.list_view_matches, matches);
+                                    listView.setAdapter(adapter);
+                                }
+                            }
+                        });
 
-        for(int i = 0; i < idArrayList.length; i++){
-            String json = sharedPref.getString(idArrayList[i], "");
-            if(!json.equals("")) {
-                JSONArray jsonArray = new JSONArray(json);
-                List<String> list = new ArrayList<String>();
-                for (int x = 0; x < jsonArray.length(); x++) {
-                    list.add(jsonArray.getString(x));
+                    }
                 }
-                matches.add(list.get(0) + " | " + list.get(2) + "  " + list.get(3));
-                id_sorted_list[i] = idArrayList[i];
             }
-        }
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.list_view_matches, matches);
-
-        listView.setAdapter(adapter);
-
-
+        });
     }
-
 
 }
