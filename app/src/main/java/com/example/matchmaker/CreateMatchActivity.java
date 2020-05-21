@@ -260,26 +260,27 @@ public class CreateMatchActivity extends AppCompatActivity {
                                     mFirestore.collection("users_matches").document(mFireAuth.getCurrentUser().getEmail()).update("matches",matches);
                                 }
 
-                                //Statistics
-                                SharedPreferences statisticsPreferences = context.getSharedPreferences(getIntent().getStringExtra("sport"), Context.MODE_PRIVATE);
-                                SharedPreferences.Editor editor_statPref = statisticsPreferences.edit();
+                                mFirestore.collection("statistics_" + getIntent().getStringExtra("sport")).document(mFireAuth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                        String active_games = documentSnapshot.getString("created");
+                                        if (active_games == null) {
+                                            active_games = String.valueOf(1);
+                                            Map<String, String> active = new HashMap<>();
+                                            active.put("created", active_games);
+                                            mFirestore.collection("statistics_" + getIntent().getStringExtra("sport")).document(mFireAuth.getCurrentUser().getEmail()).set(active);
+                                        } else {
+                                            int active_number = Integer.valueOf(active_games) + 1;
+                                            mFirestore.collection("statistics_" + getIntent().getStringExtra("sport")).document(mFireAuth.getCurrentUser().getEmail()).update("created", String.valueOf(active_number));
+                                        }
 
-                                int created_games_total = statisticsPreferences.getInt("created_matches", 0) + 1;
-
-                                //Created Matches Statistics
-                                /*Integer[] statistics = Globals.mapStatistics.get(getIntent().getStringExtra("sport"));
-                                statistics[0] = statistics [0]++;
-                                Globals.mapStatistics.put(getIntent().getStringExtra("sport"),statistics);*/
-
-                                editor_statPref.putInt("created_matches",created_games_total);
-                                editor_statPref.commit();
-                                editor_statPref.apply();
-
-                                Intent intent = new Intent(CreateMatchActivity.this, MatchInfoActivity.class);
-                                intent.putExtra("sport", getIntent().getStringExtra("sport"));
-                                intent.putExtra("activity","create");
-                                intent.putExtra("id_match",Integer.toString(id_new_match));
-                                startActivity(intent);
+                                        Intent intent = new Intent(CreateMatchActivity.this, MatchInfoActivity.class);
+                                        intent.putExtra("sport", getIntent().getStringExtra("sport"));
+                                        intent.putExtra("activity","create");
+                                        intent.putExtra("id_match",Integer.toString(id_new_match));
+                                        startActivity(intent);
+                                    }
+                                });
                             }
                         });
                     }

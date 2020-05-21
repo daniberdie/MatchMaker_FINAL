@@ -33,7 +33,7 @@ public class NextMatchesActivity extends AppCompatActivity {
     private ListView listView;
     private Button back_button;
     private ArrayList<String> matches = new ArrayList<>();
-    private String[] id_sorted_list;
+    private List<String> idArrayList = new ArrayList<>();
     private TextView textView;
     private FirebaseFirestore mFirestore;
     private FirebaseAuth mFireauth;
@@ -80,7 +80,8 @@ public class NextMatchesActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 Intent intent = new Intent(NextMatchesActivity.this, MatchInfoActivity.class);
                 intent.putExtra("sport",getIntent().getStringExtra("sport"));
-                intent.putExtra("id_match",id_sorted_list[position]);
+                intent.putExtra("id_match",idArrayList.get(position));
+                intent.putExtra("activity","next");
                 startActivity(intent);
             }
         });
@@ -93,13 +94,14 @@ public class NextMatchesActivity extends AppCompatActivity {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 if(documentSnapshot.exists()){
-                    id_sorted_list = documentSnapshot.getString("matches").split(",");
+                    final String[] id_sorted_list = documentSnapshot.getString("matches").split(",");
 
                     for (int i = 0; i < id_sorted_list.length; i++) {
                         mFirestore.collection("app_data").document(id_sorted_list[i]).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                             @Override
                             public void onSuccess(DocumentSnapshot documentSnapshot) {
                                 if(documentSnapshot.getString("sport").equals(getIntent().getStringExtra("sport"))){
+                                    idArrayList.add(documentSnapshot.getId());
                                     matches.add(documentSnapshot.getString("description") + " | " + documentSnapshot.getString("date") + "  " + documentSnapshot.getString("time"));
                                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(NextMatchesActivity.this, R.layout.list_view_matches, matches);
                                     listView.setAdapter(adapter);

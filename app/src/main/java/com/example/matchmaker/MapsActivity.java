@@ -49,7 +49,7 @@ public class MapsActivity extends FragmentActivity implements
     private GoogleMap mMap;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private LatLng [] latLngs_array;
-    private DocumentSnapshot [] idArrayList;
+    private List<DocumentSnapshot> idArrayList = new ArrayList<>();
     private FirebaseFirestore mFirestore;
 
     @Override
@@ -71,13 +71,13 @@ public class MapsActivity extends FragmentActivity implements
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 int counter = 0;
                 List<DocumentSnapshot> documentList = queryDocumentSnapshots.getDocuments();
-                idArrayList = documentList.toArray(new DocumentSnapshot[documentList.size()]);
-                latLngs_array = new LatLng[idArrayList.length];
+                latLngs_array = new LatLng[documentList.size()];
                 for (DocumentSnapshot documentSnapshot : documentList) {
                     if (documentSnapshot.getString("sport").equals(getIntent().getStringExtra("sport"))) {
                         String[] position = documentSnapshot.getString("position_map").split(",");
                         LatLng latLng = new LatLng(Double.parseDouble(position[0]), Double.parseDouble(position[1]));
                         latLngs_array[counter] = latLng;
+                        idArrayList.add(documentSnapshot);
                         counter++;
                     }
 
@@ -114,9 +114,9 @@ public class MapsActivity extends FragmentActivity implements
         MarkerOptions markerOptions = new MarkerOptions();
 
         for(int i= 0; i< latLngs_array.length; i++){
-            if(latLngs_array[i] != null && idArrayList[i] != null){
+            if(latLngs_array[i] != null && idArrayList.get(i) != null){
                 markerOptions.position(latLngs_array[i]);
-                markerOptions.title(idArrayList[i].getId());
+                markerOptions.title(idArrayList.get(i).getId());
                 mMap.addMarker(markerOptions);
             }
         }
@@ -151,6 +151,7 @@ public class MapsActivity extends FragmentActivity implements
         Intent intent = new Intent(MapsActivity.this, MatchInfoActivity.class);
         intent.putExtra("sport", getIntent().getStringExtra("sport"));
         intent.putExtra("id_match",id_match_marker);
+        intent.putExtra("activity", "map");
         startActivity(intent);
         return false;
     }

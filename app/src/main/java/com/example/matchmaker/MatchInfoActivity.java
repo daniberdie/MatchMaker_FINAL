@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -31,7 +32,12 @@ import org.json.JSONException;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class MatchInfoActivity extends AppCompatActivity {
@@ -42,6 +48,7 @@ public class MatchInfoActivity extends AppCompatActivity {
     private String comesFromActivity;
     private FirebaseFirestore mFirestore;
     private FirebaseAuth mFireauth;
+    private int joined_players, total_players;
     public boolean checkUserCreator = false;
 
     @Override
@@ -64,6 +71,7 @@ public class MatchInfoActivity extends AppCompatActivity {
         delete_match = findViewById(R.id.delete_info);
 
         comesFromActivity = getIntent().getStringExtra("activity");
+        id_match = getIntent().getStringExtra("id_match");
 
         if(getIntent().getStringExtra("sport").equals("fut"))
         {
@@ -83,9 +91,19 @@ public class MatchInfoActivity extends AppCompatActivity {
         finish_exit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                moveToNextMatchesActivity();
+                if(comesFromActivity.equals("map")){
+                    backToMapsActivity();
+                }else{
+                    moveToNextMatchesActivity();
+                }
             }
         });
+    }
+
+    private void backToMapsActivity() {
+        Intent intent = new Intent(MatchInfoActivity.this,MapsActivity.class);
+        intent.putExtra("sport", getIntent().getStringExtra("sport"));
+        startActivity(intent);
     }
 
     private void deleteMatchAndMoveToNextActivity() {
@@ -109,20 +127,6 @@ public class MatchInfoActivity extends AppCompatActivity {
 
         boolean ret = false;
 
-        id_match = getIntent().getStringExtra("id_match");
-        mFirestore.collection("app_data").document(id_match).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                DocumentSnapshot documentSnapshot = task.getResult();
-                strUser = documentSnapshot.getString("user");
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(MatchInfoActivity.this, "Fail", Toast.LENGTH_SHORT).show();
-            }
-        });
-
         if(strUser.equals(mFireauth.getCurrentUser().getEmail())){
             ret = true;
         }
@@ -138,7 +142,6 @@ public class MatchInfoActivity extends AppCompatActivity {
 
     private void getDataInfo(){
 
-        id_match = getIntent().getStringExtra("id_match");
         mFirestore.collection("app_data").document(id_match).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -149,11 +152,19 @@ public class MatchInfoActivity extends AppCompatActivity {
                 date.setText(documentSnapshot.getString("date"));
                 time.setText(documentSnapshot.getString("time"));
                 level.setText(documentSnapshot.getString("level"));
-                players.setText(documentSnapshot.getString("players"));
+                String [] participants = documentSnapshot.getString("participants").split(",");
+                if(participants[0].equals("")){
+                    joined_players = 1;
+                }else{
+                    joined_players = participants.length + 1; // Se suma 1 per contar el creador;
+                }
+
+                total_players = Integer.parseInt(documentSnapshot.getString("players"));
+
+                players.setText(String.valueOf(joined_players) + "/" + String.valueOf(total_players));
                 strUser = documentSnapshot.getString("user");
 
                 if(checkUserCreatedMatch()){
-                    delete_match.setVisibility(View.VISIBLE);
                     delete_match.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -161,16 +172,113 @@ public class MatchInfoActivity extends AppCompatActivity {
                         }
                     });
                 }else if (comesFromActivity.equals("map")){
-                    delete_match.setVisibility(View.VISIBLE);
                     delete_match.setText(R.string.join);
+                    delete_match.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if(joined_players >= total_players){
+                                Toast.makeText(MatchInfoActivity.this, "Max players", Toast.LENGTH_SHORT).show();
+                            }else{
+                                joinMatch();
+                            }
+                        }
+                    });
                 }else{
                     delete_match.setText(R.string.unjoin);
+                    delete_match.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            unjoinMatch();
+                        }
+                    });
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Toast.makeText(MatchInfoActivity.this, "Fail", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void unjoinMatch() {
+        mFirestore.collection("app_data").document(id_match).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                List<String> participants_list = new ArrayList(Arrays.asList(documentSnapshot.getString("participants").split(",")));
+                String email = mFireauth.getCurrentUser().getEmail();
+
+                if(participants_list.contains(email)){
+                    if(participants_list.size() > 1){
+                        participants_list.remove(email);
+                    }else{
+                        participants_list.set(participants_list.indexOf(email),"");
+                    }
+
+                    mFirestore.collection("app_data").document(id_match).update("participants", android.text.TextUtils.join(",", participants_list));
+                    Toast.makeText(MatchInfoActivity.this, "Match removed", Toast.LENGTH_SHORT).show();
+                    deleteFromNextMatchesList();
+                }
+
+            }
+        });
+    }
+
+    private void deleteFromNextMatchesList() {
+        mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                List<String> matches_list = new ArrayList(Arrays.asList(documentSnapshot.getString("matches").split(",")));
+                if (matches_list.contains(id_match)) {
+                    if(matches_list.size() > 1){
+                        matches_list.remove(id_match);
+                    }else{
+                        matches_list.set(matches_list.indexOf(id_match),"");
+                    }
+                    mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).update("matches", android.text.TextUtils.join(",", matches_list));
+                }
+
+                moveToNextMatchesActivity();
+            }
+        });
+    }
+
+    private void joinMatch() {
+        mFirestore.collection("app_data").document(id_match).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                String participants = documentSnapshot.getString("participants");
+                if (participants == "") {
+                    participants = mFireauth.getCurrentUser().getEmail();
+                    mFirestore.collection("app_data").document(id_match).update("participants", participants);
+                } else {
+                    participants += "," + mFireauth.getCurrentUser().getEmail();
+                }
+
+                mFirestore.collection("app_data").document(id_match).update("participants", participants);
+                Toast.makeText(MatchInfoActivity.this, "Added to NextMatches", Toast.LENGTH_SHORT).show();
+
+                addToNextMatchesList();
+            }
+        });
+    }
+
+    private void addToNextMatchesList() {
+        mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                String matches = documentSnapshot.getString("matches");
+                if (matches == null) {
+                    matches = String.valueOf(id_match);
+                    Map<String, String> user_matches = new HashMap<>();
+                    user_matches.put("matches", matches);
+                    mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).set(user_matches);
+                } else {
+                    matches += "," + String.valueOf(id_match);
+                    mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).update("matches", matches);
+                }
+
+                moveToNextMatchesActivity();
             }
         });
     }
