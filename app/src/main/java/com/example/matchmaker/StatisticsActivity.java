@@ -9,7 +9,14 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class StatisticsActivity extends Activity {
@@ -17,11 +24,19 @@ public class StatisticsActivity extends Activity {
             result1, result2, result3, result4;
     private LinearLayout layTotal, layCreated, layActive, layUssage, layoutMenu;
     private Button backBtn;
+    private FirebaseFirestore mFirestore;
+    private FirebaseAuth mFireauth;
+    private String played, created, active;
+    private int games_actived=0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_statistics);
+
+        mFireauth = FirebaseAuth.getInstance();
+        mFirestore = FirebaseFirestore.getInstance();
+
         layTotal = findViewById(R.id.layResult1);
         layActive = findViewById(R.id.layResult2);
         layCreated = findViewById(R.id.layResult3);
@@ -54,34 +69,57 @@ public class StatisticsActivity extends Activity {
     }
 
     private void getStatistics(Context context) {
-        //Active games
-        SharedPreferences sharedIdList = context.getSharedPreferences(getString(R.string.id_list), Context.MODE_PRIVATE);
-        Set<String> id_matches = sharedIdList.getStringSet(getIntent().getStringExtra("sport"), Collections.<String>emptySet());
 
-        result2.setText(Integer.toString(id_matches.size()));
+        mFirestore.collection("statistics_" + getIntent().getStringExtra("sport")).document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                played = documentSnapshot.getString("played");
+                if(played == null) played = "0";
 
-        //Played & Created
-        SharedPreferences preferencesStats = context.getSharedPreferences(getIntent().getStringExtra("sport"), Context.MODE_PRIVATE);
+                created = documentSnapshot.getString("created");
+                if(created == null) created = "0";
 
-        int created_games = preferencesStats.getInt("created_matches", 0);
-        int played_games = preferencesStats.getInt("played_matches", 0);
+                mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
 
-        result1.setText(Integer.toString(played_games));
-        result3.setText(Integer.toString(created_games));
+                        checkActiveGamesBySport(documentSnapshot.getString("matches").split(","));
+                    }
+                });
+            }
+        });
+    }
 
-        SharedPreferences preferencesStatsPadel = context.getSharedPreferences("pad", Context.MODE_PRIVATE);
-        SharedPreferences preferencesStatsFut = context.getSharedPreferences("fut", Context.MODE_PRIVATE);
-        SharedPreferences preferencesStatsBas = context.getSharedPreferences("bas", Context.MODE_PRIVATE);
+    private void checkActiveGamesBySport(String[] matches) {
+        for(int i = 0; i < matches.length; i++){
+            mFirestore.collection("app_data").document(matches[i]).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                @Override
+                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                    if(documentSnapshot.getString("sport").equals(getIntent().getStringExtra("sport"))){
+                        games_actived++;
+                        getTotalPlayedGames();
+                    }
+                }
+            });
+        }
+    }
 
-        int played_gamesPadel = preferencesStatsPadel.getInt("played_matches", 0);
-        int played_gamesFut = preferencesStatsFut.getInt("played_matches", 0);
-        int played_gamesBas = preferencesStatsBas.getInt("played_matches", 0);
+    private void getTotalPlayedGames() {
+        mFirestore.collection("statistics_total_played").document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                int total_sports_played;
+                String total = documentSnapshot.getString("total");
+                if(total == null) total_sports_played = 0;
+                else total_sports_played = Integer.valueOf(total);
+                int total_sport = (total_sports_played != 0) ? (Integer.parseInt(played) * 100) / total_sports_played : 0;
 
-        int total_played = played_gamesBas + played_gamesFut + played_gamesPadel;
-        int total_sport = (total_played != 0) ? (played_games * 100) / total_played : 0;
-
-        result4.setText(Integer.toString(total_sport) + " %");
-
+                result1.setText(played);
+                result2.setText(String.valueOf(games_actived));
+                result3.setText(created);
+                result4.setText(Integer.toString(total_sport) + " %");
+            }
+        });
     }
 
     private void setPadTheme() {

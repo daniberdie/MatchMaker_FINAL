@@ -50,6 +50,7 @@ public class MatchInfoActivity extends AppCompatActivity {
     private FirebaseAuth mFireauth;
     private int joined_players, total_players;
     public boolean checkUserCreator = false;
+    String [] participants;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,20 +108,15 @@ public class MatchInfoActivity extends AppCompatActivity {
     }
 
     private void deleteMatchAndMoveToNextActivity() {
-        SharedPreferences sharedIdList = this.getSharedPreferences(getString(R.string.id_list),Context.MODE_PRIVATE);
 
-        Set<String> id_matches_list = sharedIdList.getStringSet(getIntent().getStringExtra("sport"), null);
-
-        if(id_matches_list.contains(id_match)){
-            id_matches_list.remove(id_match);
-
-            SharedPreferences.Editor editor_list_id = sharedIdList.edit();
-            editor_list_id.putStringSet(getIntent().getStringExtra("sport"),id_matches_list);
-            editor_list_id.commit();
-            editor_list_id.apply();
-
-            moveToNextMatchesActivity();
+        for(int i=0; i <= participants.length; i++){
+            if(i<participants.length && !participants[i].equals("")) deleteFromNextMatchesList(participants[i],false);
+            else deleteFromNextMatchesList(strUser,false);
         }
+
+        mFirestore.document("app_data/" + id_match).delete();
+        moveToNextMatchesActivity();
+
     }
 
     private boolean checkUserCreatedMatch() {
@@ -152,7 +148,7 @@ public class MatchInfoActivity extends AppCompatActivity {
                 date.setText(documentSnapshot.getString("date"));
                 time.setText(documentSnapshot.getString("time"));
                 level.setText(documentSnapshot.getString("level"));
-                String [] participants = documentSnapshot.getString("participants").split(",");
+                participants = documentSnapshot.getString("participants").split(",");
                 if(participants[0].equals("")){
                     joined_players = 1;
                 }else{
@@ -217,15 +213,15 @@ public class MatchInfoActivity extends AppCompatActivity {
 
                     mFirestore.collection("app_data").document(id_match).update("participants", android.text.TextUtils.join(",", participants_list));
                     Toast.makeText(MatchInfoActivity.this, "Match removed", Toast.LENGTH_SHORT).show();
-                    deleteFromNextMatchesList();
+                    deleteFromNextMatchesList(mFireauth.getCurrentUser().getEmail(),true);
                 }
 
             }
         });
     }
 
-    private void deleteFromNextMatchesList() {
-        mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+    private void deleteFromNextMatchesList(final String user_email, final boolean moveToNextMatches) {
+        mFirestore.collection("users_matches").document(user_email).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 List<String> matches_list = new ArrayList(Arrays.asList(documentSnapshot.getString("matches").split(",")));
@@ -235,10 +231,13 @@ public class MatchInfoActivity extends AppCompatActivity {
                     }else{
                         matches_list.set(matches_list.indexOf(id_match),"");
                     }
-                    mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).update("matches", android.text.TextUtils.join(",", matches_list));
+                    mFirestore.collection("users_matches").document(user_email).update("matches", android.text.TextUtils.join(",", matches_list));
                 }
 
-                moveToNextMatchesActivity();
+                if(moveToNextMatches){
+                    moveToNextMatchesActivity();
+                }
+
             }
         });
     }
@@ -268,7 +267,7 @@ public class MatchInfoActivity extends AppCompatActivity {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 String matches = documentSnapshot.getString("matches");
-                if (matches == null) {
+                if (matches == "") {
                     matches = String.valueOf(id_match);
                     Map<String, String> user_matches = new HashMap<>();
                     user_matches.put("matches", matches);
