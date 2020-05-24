@@ -9,22 +9,22 @@
     android:orientation="vertical"
     android:background="@drawable/acces_background">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:elevation="5dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+    </androidx.appcompat.widget.Toolbar>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="2"
-            android:orientation="vertical">
-
-            <Button
-                android:id="@+id/ConfigAccessActivity"
-                android:layout_width="75dp"
-                android:layout_height="75dp"
-                android:layout_gravity="right"
-                android:backgroundTint="@color/common_google_signin_btn_text_light"
-                android:foreground="@android:drawable/ic_menu_help"
-                android:foregroundTint="@color/colorAccent"
-                android:textSize="20dp"
-                tools:ignore="MissingConstraints" />
+            android:orientation="vertical"
+            android:layout_marginTop="20dp">
 
             <ImageView
                 android:id="@+id/imageView"

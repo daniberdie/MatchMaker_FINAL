@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="select_net1">
+        <item>Wifi</item>
+        <item>Dades mòbils</item>
+    </string-array>
+    <string-array name="select_net2">
+        <item>Wifi</item>
+        <item>Phone</item>
+    </string-array>
+</resources>

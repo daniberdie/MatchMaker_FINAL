@@ -81,7 +81,7 @@
 
     //Estadistiques
     <string name="totalGames">Partits jugats:</string>
-    <string name="activeGames">Partits actius:</string>
+    <string name="activeGames">Partits apuntats:</string>
     <string name="Menu">Menu</string>
     <string name="CreatedGames">Partits creats:</string>
     <string name="SportUssage">Ús d\'aquest esport:</string>
@@ -97,5 +97,17 @@
 
     //Auth Firebase
     <string name="client_id">565122491776-c37p44kpal35r23ivmvren5gbco0h3cf.apps.googleusercontent.com</string>
+
+    //menu_options
+    <string name="preferences">Preferències de xarxa</string>
+    <string name="info">Informació</string>
+    <string name="config">Configuració xarxa</string>
+    <string name="wifi_title">Activar wifi</string>
+    <string name="wifiSummary">Vols fer servir sempre el WIFI?</string>
+    <string name="titleDialog">Introdueix valor</string>
+
+    //Keys
+    <string name="net_key">net_key</string>
+    <string name="default_key">Wifi</string>
 
 </resources>

@@ -11,14 +11,20 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.Transaction;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -170,24 +176,24 @@ public class MenuActivity extends Activity {
     }
 
     private void updateStatisticsPlayedGameAndDelete(String[] participants, String sport, String match) {
-        for(int i=0; i <= participants.length; i++){
+        int length;
+        if(participants.length == 1 && participants[0] == "") length = 0;
+        else length = participants.length;
+
+        for(int i=0; i <= length; i++){
             if(i<participants.length && !participants[i].equals("")){
-                updatePlayedMatchesForUsers(participants[i],sport);
-                updateTotalPlayedGamesForUsers(participants[i]);
-                deleteFromNextMatchesList(participants[i],match);
+                updatePlayedMatchesForUsers(participants[i],sport,match);
             }
             else {
                 String email = mFireauth.getCurrentUser().getEmail();
-                updatePlayedMatchesForUsers(email,sport);
-                updateTotalPlayedGamesForUsers(email);
-                deleteFromNextMatchesList(email,match);
+                updatePlayedMatchesForUsers(email,sport,match);
             }
         }
 
         mFirestore.document("app_data/" + match).delete();
     }
 
-    private void updateTotalPlayedGamesForUsers(final String email) {
+    private void updateTotalPlayedGamesForUsers(final String email, final String match) {
         mFirestore.collection("statistics_total_played").document(email).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
@@ -201,34 +207,54 @@ public class MenuActivity extends Activity {
                     int played_number = Integer.valueOf(total_played) + 1;
                     mFirestore.collection("statistics_total_played").document(email).update("total", String.valueOf(played_number));
                 }
+
+                deleteFromNextMatchesList(email,match);
             }
         });
     }
 
-    private void updatePlayedMatchesForUsers(final String email, final String sport) {
-        mFirestore.collection("statistics_" + sport).document(email).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                String played_games = documentSnapshot.getString("played");
-                String created_games = documentSnapshot.getString("created");
+    private void updatePlayedMatchesForUsers(final String email, final String sport, final String match) {
 
-                if (played_games == null) {
-                    played_games = String.valueOf(1);
-                    Map<String, String> active = new HashMap<>();
-                    active.put("created", created_games);
-                    active.put("played", played_games);
+        if(Globals.mapStatistics.containsKey(sport)){
+            Integer[] stats = Globals.mapStatistics.get(sport);
 
-                    mFirestore.collection("statistics_" + sport).document(email).set(active);
-                } else {
-                    int played_number = Integer.valueOf(played_games) + 1;
-                    mFirestore.collection("statistics_" + sport).document(email).update("played", String.valueOf(played_number));
-                }
-            }
-        });
+            stats[0] = stats[0] + 1;
+
+
+            Globals.mapStatistics.put(sport, stats);
+        }else{
+            Integer [] integers = new Integer [3];
+            integers[0] = 1;
+            integers[1] = 0;
+            integers[2] = 0;
+            Globals.mapStatistics.put(sport,integers);
+        }
+
+        updateTotalPlayedGamesForUsers(email,match);
+
     }
 
     private void deleteFromNextMatchesList(final String user_email, final String match) {
-        mFirestore.collection("users_matches").document(user_email).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+
+        mFirestore.runTransaction(new Transaction.Function<Void>() {
+            @Nullable
+            @Override
+            public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                DocumentReference docRef = mFirestore.document(user_email);
+                DocumentSnapshot docSnap = transaction.get(docRef);
+                List<String> matches_list = new ArrayList(Arrays.asList(docSnap.getString("matches").split(",")));
+                if (matches_list.contains(match)) {
+                    if(matches_list.size() > 1){
+                        matches_list.remove(match);
+                    }else{
+                        matches_list.set(matches_list.indexOf(match),"");
+                    }
+                    transaction.update(docRef, "matches", android.text.TextUtils.join(",", matches_list));
+                }
+                return null;
+            }
+        });
+        /*mFirestore.collection("users_matches").document(user_email).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 List<String> matches_list = new ArrayList(Arrays.asList(documentSnapshot.getString("matches").split(",")));
@@ -238,10 +264,12 @@ public class MenuActivity extends Activity {
                     }else{
                         matches_list.set(matches_list.indexOf(match),"");
                     }
-                    mFirestore.collection("users_matches").document(user_email).update("matches", android.text.TextUtils.join(",", matches_list));
+                    Map<String,String> map = new HashMap<>();
+                    map.put("matches",android.text.TextUtils.join(",", matches_list));
+                    mFirestore.collection("users_matches").document(user_email).set(map);
                 }
             }
-        });
+        });*/
     }
 
     private void setFutTheme()

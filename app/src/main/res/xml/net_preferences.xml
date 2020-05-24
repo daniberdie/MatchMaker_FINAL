@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/config">
+
+        <CheckBoxPreference
+            android:id="@+id/wifiEnabled"
+            android:key="@string/net_key"
+            android:title="@string/wifi_title"
+            android:summary="@string/wifiSummary"
+            android:defaultValue="true"/>
+    </PreferenceCategory>
+</PreferenceScreen>

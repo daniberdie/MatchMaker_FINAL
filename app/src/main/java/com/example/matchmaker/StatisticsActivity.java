@@ -65,61 +65,43 @@ public class StatisticsActivity extends Activity {
             }
         });
 
-        getStatistics(this);
+        getStatistics();
     }
 
-    private void getStatistics(Context context) {
+    private void getStatistics() {
+        if(Globals.mapStatistics.containsKey(getIntent().getStringExtra("sport"))){
+            Integer [] stats = Globals.mapStatistics.get(getIntent().getStringExtra("sport"));
+            int fut_plays = 0, bas_plays = 0, pad_plays = 0;
 
-        mFirestore.collection("statistics_" + getIntent().getStringExtra("sport")).document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                played = documentSnapshot.getString("played");
-                if(played == null) played = "0";
-
-                created = documentSnapshot.getString("created");
-                if(created == null) created = "0";
-
-                mFirestore.collection("users_matches").document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-
-                        checkActiveGamesBySport(documentSnapshot.getString("matches").split(","));
-                    }
-                });
+            if(Globals.mapStatistics.containsKey("fut")){
+                Integer [] stats_fut = Globals.mapStatistics.get("fut");
+                fut_plays = stats_fut[0];
             }
-        });
-    }
+            if(Globals.mapStatistics.containsKey("bas")){
+                Integer [] stats_bas = Globals.mapStatistics.get("bas");
+                bas_plays = stats_bas[0];
+            }
+            if(Globals.mapStatistics.containsKey("pad")){
+                Integer [] stats_pad = Globals.mapStatistics.get("pad");
+                pad_plays = stats_pad[0];
+            }
 
-    private void checkActiveGamesBySport(String[] matches) {
-        for(int i = 0; i < matches.length; i++){
-            mFirestore.collection("app_data").document(matches[i]).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                @Override
-                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                    if(documentSnapshot.getString("sport").equals(getIntent().getStringExtra("sport"))){
-                        games_actived++;
-                        getTotalPlayedGames();
-                    }
-                }
-            });
+            int total_sports_played = fut_plays + bas_plays + pad_plays;
+
+            int total_sport = (total_sports_played != 0) ? (Integer.parseInt(played) * 100) / total_sports_played : 0;
+
+            result1.setText(Integer.toString(stats[0]));
+            result2.setText(Integer.toString(stats[1]));
+            result3.setText(Integer.toString(stats[2]));
+            result4.setText(Integer.toString(total_sport) + " %");
+        } else {
+            result1.setText("0");
+            result2.setText("0");
+            result3.setText("0");
+            result4.setText("0" + " %");
         }
-    }
 
-    private void getTotalPlayedGames() {
-        mFirestore.collection("statistics_total_played").document(mFireauth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                int total_sports_played;
-                String total = documentSnapshot.getString("total");
-                if(total == null) total_sports_played = 0;
-                else total_sports_played = Integer.valueOf(total);
-                int total_sport = (total_sports_played != 0) ? (Integer.parseInt(played) * 100) / total_sports_played : 0;
 
-                result1.setText(played);
-                result2.setText(String.valueOf(games_actived));
-                result3.setText(created);
-                result4.setText(Integer.toString(total_sport) + " %");
-            }
-        });
     }
 
     private void setPadTheme() {

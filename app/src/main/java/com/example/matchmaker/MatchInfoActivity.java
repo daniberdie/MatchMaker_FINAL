@@ -51,6 +51,7 @@ public class MatchInfoActivity extends AppCompatActivity {
     private int joined_players, total_players;
     public boolean checkUserCreator = false;
     String [] participants;
+    String participants_join;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -167,7 +168,7 @@ public class MatchInfoActivity extends AppCompatActivity {
                             throwToast();
                         }
                     });
-                }else if (comesFromActivity.equals("map")){
+                }else if (comesFromActivity.equals("map") && !isJoined()){
                     delete_match.setText(R.string.join);
                     delete_match.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -197,12 +198,17 @@ public class MatchInfoActivity extends AppCompatActivity {
         });
     }
 
+    private boolean isJoined() {
+        List<String> participants_joined = Arrays.asList(participants);
+        return participants_joined.contains(mFireauth.getCurrentUser().getEmail());
+    }
+
     private void unjoinMatch() {
         mFirestore.collection("app_data").document(id_match).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                List<String> participants_list = new ArrayList(Arrays.asList(documentSnapshot.getString("participants").split(",")));
-                String email = mFireauth.getCurrentUser().getEmail();
+                final List<String> participants_list = new ArrayList(Arrays.asList(documentSnapshot.getString("participants").split(",")));
+                final String email = mFireauth.getCurrentUser().getEmail();
 
                 if(participants_list.contains(email)){
                     if(participants_list.size() > 1){
@@ -211,11 +217,25 @@ public class MatchInfoActivity extends AppCompatActivity {
                         participants_list.set(participants_list.indexOf(email),"");
                     }
 
+                    if(Globals.mapStatistics.containsKey(getIntent().getStringExtra("sport"))){
+                        Integer[] stats = Globals.mapStatistics.get(getIntent().getStringExtra("sport"));
+
+                        stats[1] = stats[1] - 1;
+
+
+                        Globals.mapStatistics.put(getIntent().getStringExtra("sport"), stats);
+                    } else {
+                        Integer [] integers = new Integer [3];
+                        integers[0] = 0;
+                        integers[1] = 0;
+                        integers[2] = 0;
+                        Globals.mapStatistics.put(getIntent().getStringExtra("sport"),integers);
+                    }
+
                     mFirestore.collection("app_data").document(id_match).update("participants", android.text.TextUtils.join(",", participants_list));
                     Toast.makeText(MatchInfoActivity.this, "Match removed", Toast.LENGTH_SHORT).show();
                     deleteFromNextMatchesList(mFireauth.getCurrentUser().getEmail(),true);
                 }
-
             }
         });
     }
@@ -232,6 +252,7 @@ public class MatchInfoActivity extends AppCompatActivity {
                         matches_list.set(matches_list.indexOf(id_match),"");
                     }
                     mFirestore.collection("users_matches").document(user_email).update("matches", android.text.TextUtils.join(",", matches_list));
+
                 }
 
                 if(moveToNextMatches){
@@ -246,18 +267,33 @@ public class MatchInfoActivity extends AppCompatActivity {
         mFirestore.collection("app_data").document(id_match).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                String participants = documentSnapshot.getString("participants");
-                if (participants == "") {
-                    participants = mFireauth.getCurrentUser().getEmail();
-                    mFirestore.collection("app_data").document(id_match).update("participants", participants);
+                participants_join = documentSnapshot.getString("participants");
+                if (participants_join == "") {
+                    participants_join = mFireauth.getCurrentUser().getEmail();
                 } else {
-                    participants += "," + mFireauth.getCurrentUser().getEmail();
+                    participants_join += "," + mFireauth.getCurrentUser().getEmail();
                 }
 
-                mFirestore.collection("app_data").document(id_match).update("participants", participants);
+                mFirestore.collection("app_data").document(id_match).update("participants", participants_join);
                 Toast.makeText(MatchInfoActivity.this, "Added to NextMatches", Toast.LENGTH_SHORT).show();
 
+                if(Globals.mapStatistics.containsKey(getIntent().getStringExtra("sport"))){
+                    Integer[] stats = Globals.mapStatistics.get(getIntent().getStringExtra("sport"));
+
+                    stats[1] = stats[1] + 1;
+
+                    Globals.mapStatistics.put(getIntent().getStringExtra("sport"), stats);
+
+                }else{
+                    Integer [] integers = new Integer [3];
+                    integers[0] = 0;
+                    integers[1] = 1;
+                    integers[2] = 0;
+                    Globals.mapStatistics.put(getIntent().getStringExtra("sport"),integers);
+                }
+
                 addToNextMatchesList();
+
             }
         });
     }
@@ -267,7 +303,7 @@ public class MatchInfoActivity extends AppCompatActivity {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 String matches = documentSnapshot.getString("matches");
-                if (matches == "") {
+                if (matches == "" || matches == null) {
                     matches = String.valueOf(id_match);
                     Map<String, String> user_matches = new HashMap<>();
                     user_matches.put("matches", matches);

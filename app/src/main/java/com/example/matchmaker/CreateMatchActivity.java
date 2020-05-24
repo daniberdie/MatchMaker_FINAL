@@ -246,10 +246,11 @@ public class CreateMatchActivity extends AppCompatActivity {
                     public void onSuccess(Void aVoid) {
                         Toast.makeText(CreateMatchActivity.this, "Added to firebase", Toast.LENGTH_SHORT).show();
                         mFirestore.collection("users_matches").document(mFireAuth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @RequiresApi(api = Build.VERSION_CODES.N)
                             @Override
                             public void onSuccess(DocumentSnapshot documentSnapshot) {
                                 String matches = documentSnapshot.getString("matches");
-                                if(matches == "") {
+                                if(matches == "" || matches == null) {
                                     matches = String.valueOf(id_new_match);
                                     Map<String, String> user_matches = new HashMap<>();
                                     user_matches.put("matches", matches);
@@ -260,29 +261,27 @@ public class CreateMatchActivity extends AppCompatActivity {
                                     mFirestore.collection("users_matches").document(mFireAuth.getCurrentUser().getEmail()).update("matches",matches);
                                 }
 
-                                mFirestore.collection("statistics_" + getIntent().getStringExtra("sport")).document(mFireAuth.getCurrentUser().getEmail()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                    @Override
-                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                        String created_games = documentSnapshot.getString("created");
-                                        String played_games = documentSnapshot.getString("played");
-                                        if (created_games == null) {
-                                            created_games = String.valueOf(1);
-                                            Map<String, String> active = new HashMap<>();
-                                            active.put("created", created_games);
-                                            active.put("played",played_games);
-                                            mFirestore.collection("statistics_" + getIntent().getStringExtra("sport")).document(mFireAuth.getCurrentUser().getEmail()).set(active);
-                                        } else {
-                                            int active_number = Integer.valueOf(created_games) + 1;
-                                            mFirestore.collection("statistics_" + getIntent().getStringExtra("sport")).document(mFireAuth.getCurrentUser().getEmail()).update("created", String.valueOf(active_number));
-                                        }
+                                if(Globals.mapStatistics.containsKey(getIntent().getStringExtra("sport"))){
+                                    Integer[] stats = Globals.mapStatistics.get(getIntent().getStringExtra("sport"));
 
-                                        Intent intent = new Intent(CreateMatchActivity.this, MatchInfoActivity.class);
-                                        intent.putExtra("sport", getIntent().getStringExtra("sport"));
-                                        intent.putExtra("activity","create");
-                                        intent.putExtra("id_match",Integer.toString(id_new_match));
-                                        startActivity(intent);
-                                    }
-                                });
+                                    stats[2] = stats[2] + 1;
+
+                                    Globals.mapStatistics.put(getIntent().getStringExtra("sport"), stats);
+                                } else {
+                                    Integer [] integers = new Integer [3];
+                                    integers[0] = 0;
+                                    integers[1] = 0;
+                                    integers[2] = 1;
+                                    Globals.mapStatistics.put(getIntent().getStringExtra("sport"),integers);
+                                }
+
+
+                                Intent intent = new Intent(CreateMatchActivity.this, MatchInfoActivity.class);
+                                intent.putExtra("sport", getIntent().getStringExtra("sport"));
+                                intent.putExtra("activity","create");
+                                intent.putExtra("id_match",Integer.toString(id_new_match));
+                                startActivity(intent);
+
                             }
                         });
                     }
